@@ -1,2 +1,7 @@
 .*
 .idea
+.DS_Store
+
+results.npy
+
+__pycache__
