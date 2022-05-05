@@ -4,6 +4,11 @@ from imblearn.pipeline import Pipeline
 from imblearn.over_sampling import SMOTE, BorderlineSMOTE
 from imblearn.under_sampling import RandomUnderSampler
 from imblearn.ensemble import RUSBoostClassifier
+from imblearn.ensemble import BalancedBaggingClassifier
+from imblearn.under_sampling import RandomUnderSampler
+
+
+
 
 RANDOM_STATE = 1234
 BASE_CLF = DecisionTreeClassifier(random_state=RANDOM_STATE)
@@ -39,6 +44,12 @@ clfs = {
     'RUSBoost': Pipeline(steps=[('model', RUSBoostClassifier(base_estimator=BASE_CLF,
                                                              n_estimators=N_ESTIMATORS,
                                                              random_state=RANDOM_STATE))]),
+    'EBBAG': Pipeline(steps=[('model', BalancedBaggingClassifier(base_estimator=BASE_CLF,
+                                                             n_estimators=N_ESTIMATORS,
+                                                             random_state=RANDOM_STATE,
+                                                             sampler=RandomUnderSampler()))])
+
+
 }
 
 datasets = ['ecoli-0_vs_1', 'ecoli1', 'ecoli2', 'ecoli3', 'glass-0-1-2-3_vs_4-5-6', 'glass0', 'glass1', 'glass6',
