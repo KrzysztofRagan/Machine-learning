@@ -5,9 +5,12 @@ from sklearn.base import clone
 from sklearn.metrics import accuracy_score
 from parameters import *
 from math import sqrt
+from classifiers import clfs
+from datasets import datasets
 
 rskf = RepeatedStratifiedKFold(n_splits=n_splits, n_repeats=n_repeats, random_state=RANDOM_STATE)
 
+n_datasets = len(datasets)
 scores = np.zeros((len(clfs), n_datasets, n_splits * n_repeats))
 
 
