@@ -73,8 +73,9 @@ def get_weight(X, y, k_neighbors=5, fi=1):
 
 
 # Different version of trial of each classifier
-for data_id, dataset in enumerate(datasets):
-    dataset = np.genfromtxt("datasets/%s.dat" % dataset, delimiter=",", comments='@',
+for data_id, dataset_name in enumerate(datasets):
+    print(f'Dataset {dataset_name}')
+    dataset = np.genfromtxt("datasets/%s.dat" % dataset_name, delimiter=",", comments='@',
                             converters={(-1): lambda s: 0.0 if (s.strip().decode('ascii')) == 'negative' else 1.0})
     X = dataset[:, :-1]
     y = dataset[:, -1].astype(int)
@@ -82,8 +83,6 @@ for data_id, dataset in enumerate(datasets):
     for fold_id, (train, test) in enumerate(rskf.split(X, y)):
         for clf_id, clf_name in enumerate(clfs):
             clf = clone(clfs[clf_name])
-            weights = get_weight(X[train], y[train])
-            print(weights)
             clf.fit(X[train], y[train])
             y_pred = clf.predict(X[test])
             scores[clf_id, data_id, fold_id] = accuracy_score(y[test], y_pred)

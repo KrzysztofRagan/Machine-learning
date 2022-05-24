@@ -1,7 +1,7 @@
 import numpy as np
 from scipy.stats import rankdata
 from scipy.stats import ranksums
-from parameters import clfs
+from classifiers import clfs
 from tabulate import tabulate
 from scipy.stats import ttest_rel
 
