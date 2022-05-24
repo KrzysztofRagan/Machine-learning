@@ -17,6 +17,7 @@ from joblib import Parallel
 from sklearn.ensemble._base import BaseEnsemble, _partition_estimators
 from sklearn.base import ClassifierMixin, RegressorMixin
 from sklearn.metrics import r2_score, accuracy_score
+from sklearn.metrics.pairwise import euclidean_distances
 from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor
 from sklearn.utils import check_random_state, column_or_1d, deprecated
 from sklearn.utils import indices_to_mask
@@ -38,15 +39,13 @@ def _euclidean_distance(row1, row2):
     return sqrt(distance)
 
 
-def _nearest_neighbors(train, test_row, num_neighbors):
-    distances = list()
-    for train_row in train:
-        dist = _euclidean_distance(test_row, train_row)
-        distances.append((train_row, dist))
-    distances.sort(key=lambda tup: tup[1])
+def _nearest_neighbors(X, Y, k_neighbors):
+    distances = euclidean_distances(Y, [X])
+    l = list(zip(distances, Y))
+    l.sort(key=lambda tup: tup[0])
     neighbors = list()
-    for i in range(num_neighbors):
-        neighbors.append(distances[i][0])
+    for i in range(k_neighbors):
+        neighbors.append(l[i][1])
     return neighbors
 
 
@@ -376,9 +375,9 @@ class BaseBagging(BaseEnsemble, metaclass=ABCMeta):
             if y[i] == majority_class:
                 sample_weight.append(0.5 * n_major / n_minor)
             else:
-                test_row = X[i]
-                train = np.delete(X.copy(), i, 0)
-                neighbors = _nearest_neighbors(train, test_row, self.k_neighbours)
+                sample = X[i]
+                all_neighbours = np.delete(X.copy(), i, 0)
+                neighbors = _nearest_neighbors(sample, all_neighbours, self.k_neighbours)
                 N_prim = 0
                 for neighbor in neighbors:
                     idx = np.where(np.all(X == neighbor, axis=1))[0][0]
