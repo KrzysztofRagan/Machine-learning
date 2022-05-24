@@ -368,10 +368,12 @@ class BaseBagging(BaseEnsemble, metaclass=ABCMeta):
         random_state = check_random_state(self.random_state)
 
         sample_weight = []
-        n_major = np.sum(y)
-        n_minor = np.sum(1 - y)
+        counts = np.bincount(y)
+        majority_class = np.argmax(counts)
+        n_major = np.max(counts)
+        n_minor = np.min(counts)
         for i in range(len(X)):
-            if y[i] == 1:
+            if y[i] == majority_class:
                 sample_weight.append(0.5 * n_major / n_minor)
             else:
                 test_row = X[i]
@@ -379,11 +381,8 @@ class BaseBagging(BaseEnsemble, metaclass=ABCMeta):
                 neighbors = _nearest_neighbors(train, test_row, self.k_neighbours)
                 N_prim = 0
                 for neighbor in neighbors:
-                    idx = 0
-                    for j in range(len(X)):
-                        if np.array_equal(X[j], neighbor):
-                            idx = j
-                    if y[idx] == 1:
+                    idx = np.where(np.all(X == neighbor, axis=1))[0][0]
+                    if y[idx] == majority_class:
                         N_prim += 1
                 w = 0.5 * (N_prim ** self.fi / self.k_neighbours + 1)
                 sample_weight.append(w)
