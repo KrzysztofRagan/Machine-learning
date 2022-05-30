@@ -17,7 +17,7 @@ from joblib import Parallel
 from sklearn.ensemble._base import BaseEnsemble, _partition_estimators
 from sklearn.base import ClassifierMixin, RegressorMixin
 from sklearn.metrics import r2_score, accuracy_score
-from sklearn.metrics.pairwise import euclidean_distances
+from sklearn.metrics.pairwise import euclidean_distances, pairwise_distances
 from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor
 from sklearn.utils import check_random_state, column_or_1d, deprecated
 from sklearn.utils import indices_to_mask
@@ -32,15 +32,8 @@ __all__ = ["NBBaggingClassifier"]
 MAX_INT = np.iinfo(np.int32).max
 
 
-def _euclidean_distance(row1, row2):
-    distance = 0.0
-    for i in range(len(row1) - 1):
-        distance += (row1[i] - row2[i]) ** 2
-    return sqrt(distance)
-
-
-def _nearest_neighbors(X, Y, k_neighbors):
-    distances = euclidean_distances(Y, [X])
+def _nearest_neighbors(X, Y, k_neighbors, metric="euclidean"):
+    distances = pairwise_distances(Y, [X], metric)
     l = list(zip(distances, Y))
     l.sort(key=lambda tup: tup[0])
     neighbors = list()
@@ -259,6 +252,7 @@ class BaseBagging(BaseEnsemble, metaclass=ABCMeta):
             n_estimators=10,
             k_neighbours=5,
             fi=1,
+            dist_metric="euclidean",
             *,
             max_samples=1.0,
             max_features=1.0,
@@ -274,6 +268,7 @@ class BaseBagging(BaseEnsemble, metaclass=ABCMeta):
 
         self.k_neighbours = k_neighbours
         self.fi = fi
+        self.dist_metric = dist_metric
         self.max_samples = max_samples
         self.max_features = max_features
         self.bootstrap = bootstrap
@@ -284,7 +279,7 @@ class BaseBagging(BaseEnsemble, metaclass=ABCMeta):
         self.random_state = random_state
         self.verbose = verbose
 
-    def fit(self, X, y, sample_weight=None):
+    def fit(self, X, y):
         """Build a Bagging ensemble of estimators from the training set (X, y).
 
         Parameters
@@ -316,7 +311,7 @@ class BaseBagging(BaseEnsemble, metaclass=ABCMeta):
             force_all_finite=False,
             multi_output=True,
         )
-        return self._fit(X, y, self.max_samples, sample_weight=sample_weight)
+        return self._fit(X, y, self.max_samples)
 
     def _parallel_args(self):
         return {}
@@ -327,7 +322,6 @@ class BaseBagging(BaseEnsemble, metaclass=ABCMeta):
             y,
             max_samples=None,
             max_depth=None,
-            sample_weight=None,
             check_input=True,
     ):
         """Build a Bagging ensemble of estimators from the training
@@ -730,6 +724,7 @@ class NBBaggingClassifier(ClassifierMixin, BaseBagging):
             n_estimators=10,
             k_neighbours=5,
             fi=1,
+            dist_metric="euclidean",
             *,
             max_samples=1.0,
             max_features=1.0,
@@ -747,6 +742,7 @@ class NBBaggingClassifier(ClassifierMixin, BaseBagging):
             n_estimators=n_estimators,
             k_neighbours=k_neighbours,
             fi=fi,
+            dist_metric=dist_metric,
             max_samples=max_samples,
             max_features=max_features,
             bootstrap=bootstrap,
