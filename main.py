@@ -13,7 +13,7 @@ import pandas as pd
 metrics = (geometric_mean_score, specificity_score, f1_score, accuracy_score)
 metrics_names = ('geometric_mean_score', 'specificity_score', 'f1_score', 'accuracy_score')
 
-#experiment loop
+# experiment loop
 # for clf_name, clf in clfs.items():
 #     print(clf_name)
 #     scores = experiment(clf=clf,
@@ -25,40 +25,42 @@ metrics_names = ('geometric_mean_score', 'specificity_score', 'f1_score', 'accur
 #     np.save(f'./results/{clf_name}', scores)  # save scores in clf_name.npy file
 
 
-
 ###########################################################################
 # ANALYSIS
 ###########################################################################
 
 
-clfs_names = ['NBBAG_k7_fi0.5_eucl', 'NBBAG_k7_fi1_eucl','NBBAG_k7_fi1.5_eucl', 'NBBAG_k7_fi2_eucl']
+clfs_names = [clf_name for clf_name in clfs.keys()]
 clfs_scores = {clf_name: np.load(f'./results/{clf_name}.npy') for clf_name in clfs_names}
 
-clfs_mean_scores = {clf_name: np.mean(clfs_scores[clf_name], axis = 2) for clf_name in clfs_scores.keys()}
+clfs_mean_scores = {clf_name: np.mean(clfs_scores[clf_name], axis=2) for clf_name in clfs_scores.keys()}
 
-#saving mean_scores to files (1 classfier = 1 file)
+# saving mean_scores to files (1 classfier = 1 file)
 for clf_name, mean_score in clfs_mean_scores.items():
-    mean_score = pd.DataFrame(np.round(mean_score.T, 2), columns= metrics_names, index= datasets)
-    mean_score.to_csv(f'./results/clfs_mean_scores/{clf_name}.csv', sep= '\t')
+    mean_score = pd.DataFrame(np.round(mean_score.T, 2), columns=metrics_names, index=datasets)
+    mean_score.to_csv(f'./results/clfs_mean_scores/{clf_name}.csv', sep='\t')
 
-#saving metrics to files (1 metric = 1 file)
+# saving metrics to files (1 metric = 1 file)
 met_mean_scores = {}
 for i, metric_name in enumerate(metrics_names):
     mean_score = np.array([ms[i] for ms in clfs_mean_scores.values()])
     met_mean_scores[metric_name] = mean_score
-    mean_score = pd.DataFrame(np.round(mean_score.T, 2), columns= clfs_names, index= datasets)
-    mean_score.to_csv(f'./results/metric_mean_scores/{metric_name}.csv', sep= '\t')   
+    mean_score = pd.DataFrame(np.round(mean_score.T, 2), columns=clfs_names, index=datasets)
+    mean_score.to_csv(f'./results/metric_mean_scores/dist_comparison/{metric_name}.csv', sep='\t')
 
-
-#testing different parameters by t-student 
+# testing different parameters by t-student
 g_mean_score = np.array([s[0] for s in clfs_scores.values()])
-g_mean_scores = np.swapaxes(g_mean_score, 0, 1) #datasets x metrics x folds
+g_mean_scores = np.swapaxes(g_mean_score, 0, 1)  # datasets x metrics x folds
 print(g_mean_scores.shape)
+
+stat_better_df = []
 for i, g_mean in enumerate(g_mean_scores):
-    print('\n',datasets[i])
-    t_student(g_mean)
+    # print('\n', datasets[i])
+    stat_better, stat_better_list = t_student(g_mean, clfs_names)
+    stat_better_df.append(stat_better_list)
 
-
+stat_better_df = pd.DataFrame(stat_better_df, columns=clfs_names, index=datasets)
+print(stat_better_df)
 
 # scores = np.load('results.npy')
 # print("\nScores:\n", scores.shape)

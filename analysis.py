@@ -49,47 +49,45 @@ def friedmann(ranks):
 
 
 # ---------------- TEST T-STUDENTA ------------------
-def t_student(dataset_scores):
-    '''
+def t_student(dataset_scores, clfs_names, alfa=0.05):
+    """
     Oblicza tabele porównawczą klasyfikatorów dla podanej tablicy
 
     :param dataset_scores: columns: classifiers, rows: folds
     :type dataset_scores:
+    :param clfs_names:
+    :type clfs_names:
+    :param alfa:
+    :type alfa:
     :return:
     :rtype:
-    '''
-    print("\n------------ TEST T-STUDENTA ------------")
-    # mean_scores = np.mean(scores, axis=2)
-    # print("\nMean scores: \n", mean_scores)
-    # print("\nScores\n", scores[:,0])
+    """
 
-    # for i,d_name in enumerate(datasets):
-    # print(f"T-stats for {d_name}")
     # dateset_scores = scores[:,i]
-    alfa = .05
-    t_statistic = np.zeros((len(clfs), len(clfs)))
-    p_value = np.zeros((len(clfs), len(clfs)))
+    n_clfs = len(clfs_names)
+    t_statistic = np.zeros((n_clfs, n_clfs))
+    p_value = np.zeros((n_clfs, n_clfs))
 
-    for i in range(len(clfs)):
-        for j in range(len(clfs)):
+    for i in range(n_clfs):
+        for j in range(n_clfs):
             t_statistic[i, j], p_value[i, j] = ttest_rel(dataset_scores[i], dataset_scores[j])
     # print("t-statistic:\n", t_statistic, "\n\np-value:\n", p_value)
 
-    headers = list(clfs.keys())
-    names_column = np.expand_dims(np.array(list(clfs.keys())), axis=1)
+    headers = clfs_names
+    names_column = np.expand_dims(np.array(clfs_names), axis=1)
     t_statistic_table = np.concatenate((names_column, t_statistic), axis=1)
     t_statistic_table = tabulate(t_statistic_table, headers, floatfmt=".2f")
     p_value_table = np.concatenate((names_column, p_value), axis=1)
     p_value_table = tabulate(p_value_table, headers, floatfmt=".2f")
     # print("t-statistic:\n", t_statistic_table, "\n\np-value:\n", p_value_table)
 
-    advantage = np.zeros((len(clfs), len(clfs)))
+    advantage = np.zeros((n_clfs, n_clfs))
     advantage[t_statistic > 0] = 1
     advantage_table = tabulate(np.concatenate(
         (names_column, advantage), axis=1), headers)
     # print("\nAdvantage:\n", advantage_table)
 
-    significance = np.zeros((len(clfs), len(clfs)))
+    significance = np.zeros((n_clfs, n_clfs))
     significance[p_value <= alfa] = 1
     significance_table = tabulate(np.concatenate(
         (names_column, significance), axis=1), headers)
@@ -98,12 +96,26 @@ def t_student(dataset_scores):
     stat_better = significance * advantage
     stat_better_table = tabulate(np.concatenate(
         (names_column, stat_better), axis=1), headers)
-    print("Statistically significantly better:\n", stat_better_table)
+
+    stat_better_list = []
+    for i in range(n_clfs):
+        # print(f"{clfs_names[i]} stat better than:", end="")
+        tmp = []
+        for j in range(n_clfs):
+            if stat_better[i][j] == 1:
+                tmp.append(j+1)
+                # print(f"{clfs_names[j]}", end="")
+        stat_better_list.append(tmp)
+        # print()
+
+    # print("Statistically significantly better:\n", stat_better_table)
+
+    return stat_better, stat_better_list
 
 
 # ---------------- TEST WILCOXONA ------------------
 
-def wilcoxon(ranks):
+def wilcoxon(ranks, clfs_names, alfa=0.05):
     '''
     Wilcoxon test
 
@@ -114,28 +126,29 @@ def wilcoxon(ranks):
     '''
     print("\n------------ TEST WILCOXONA ------------")
     alfa = .05
-    w_statistic = np.zeros((len(clfs), len(clfs)))
-    p_value = np.zeros((len(clfs), len(clfs)))
+    n_clfs = len(clfs_names)
+    w_statistic = np.zeros((n_clfs, n_clfs))
+    p_value = np.zeros((n_clfs, n_clfs))
 
-    for i in range(len(clfs)):
-        for j in range(len(clfs)):
+    for i in range(n_clfs):
+        for j in range(n_clfs):
             w_statistic[i, j], p_value[i, j] = ranksums(ranks.T[i], ranks.T[j])
 
-    headers = list(clfs.keys())
-    names_column = np.expand_dims(np.array(list(clfs.keys())), axis=1)
+    headers = clfs_names
+    names_column = np.expand_dims(np.array(clfs_names), axis=1)
     w_statistic_table = np.concatenate((names_column, w_statistic), axis=1)
     w_statistic_table = tabulate(w_statistic_table, headers, floatfmt=".2f")
     p_value_table = np.concatenate((names_column, p_value), axis=1)
     p_value_table = tabulate(p_value_table, headers, floatfmt=".2f")
     print("\nw-statistic:\n", w_statistic_table, "\n\np-value:\n", p_value_table)
 
-    advantage = np.zeros((len(clfs), len(clfs)))
+    advantage = np.zeros((n_clfs, n_clfs))
     advantage[w_statistic > 0] = 1
     advantage_table = tabulate(np.concatenate(
         (names_column, advantage), axis=1), headers)
     print("\nAdvantage:\n", advantage_table)
 
-    significance = np.zeros((len(clfs), len(clfs)))
+    significance = np.zeros((n_clfs, n_clfs))
     significance[p_value <= alfa] = 1
     significance_table = tabulate(np.concatenate(
         (names_column, significance), axis=1), headers)
