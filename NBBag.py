@@ -371,7 +371,10 @@ class BaseBagging(BaseEnsemble, metaclass=ABCMeta):
             else:
                 sample = X[i]
                 all_neighbours = np.delete(X.copy(), i, 0)
-                neighbors = _nearest_neighbors(sample, all_neighbours, self.k_neighbours)
+                neighbors = _nearest_neighbors(sample,
+                                               all_neighbours,
+                                               self.k_neighbours,
+                                               metric=self.dist_metric)
                 N_prim = 0
                 for neighbor in neighbors:
                     idx = np.where(np.all(X == neighbor, axis=1))[0][0]
