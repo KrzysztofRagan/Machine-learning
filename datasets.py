@@ -10,16 +10,16 @@ datasets = ['ecoli-0_vs_1',
             'iris0',
             'new-thyroid1',
             'newthyroid2',
-            # 'page-blocks0',
+            'page-blocks0',
             'pima',
-            # 'segment0',
+            'segment0',
             'vehicle0',
             'vehicle1',
             'vehicle2',
             'vehicle3',
             'wisconsin',
             'yeast1',
-            'yeast3',]
+            'yeast3']
 
 # datasets = ['ecoli-0_vs_1', 'ecoli1', 'ecoli2', 'ecoli3', 'glass0']
 
