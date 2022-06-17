@@ -115,7 +115,7 @@ def t_student(dataset_scores, clfs_names, alfa=0.05):
 
 # ---------------- TEST WILCOXONA ------------------
 
-def wilcoxon(ranks, clfs_names, alfa=0.05):
+def wilcoxon(mean_scores, clfs_names, alfa=0.05):
     '''
     Wilcoxon test
 
@@ -124,8 +124,11 @@ def wilcoxon(ranks, clfs_names, alfa=0.05):
     :return:
     :rtype:
     '''
-    print("\n------------ TEST WILCOXONA ------------")
-    alfa = .05
+    ranks = []
+    for ms in mean_scores:
+        ranks.append(rankdata(ms).tolist())
+    ranks = np.array(ranks)
+
     n_clfs = len(clfs_names)
     w_statistic = np.zeros((n_clfs, n_clfs))
     p_value = np.zeros((n_clfs, n_clfs))
@@ -140,21 +143,36 @@ def wilcoxon(ranks, clfs_names, alfa=0.05):
     w_statistic_table = tabulate(w_statistic_table, headers, floatfmt=".2f")
     p_value_table = np.concatenate((names_column, p_value), axis=1)
     p_value_table = tabulate(p_value_table, headers, floatfmt=".2f")
-    print("\nw-statistic:\n", w_statistic_table, "\n\np-value:\n", p_value_table)
+    # print("\nw-statistic:\n", w_statistic_table, "\n\np-value:\n", p_value_table)
 
     advantage = np.zeros((n_clfs, n_clfs))
     advantage[w_statistic > 0] = 1
     advantage_table = tabulate(np.concatenate(
         (names_column, advantage), axis=1), headers)
-    print("\nAdvantage:\n", advantage_table)
+    # print("\nAdvantage:\n", advantage_table)
 
     significance = np.zeros((n_clfs, n_clfs))
     significance[p_value <= alfa] = 1
     significance_table = tabulate(np.concatenate(
         (names_column, significance), axis=1), headers)
-    print("\nStatistical significance (alpha = 0.05):\n", significance_table)
+    # print("\nStatistical significance (alpha = 0.05):\n", significance_table)
 
     stat_better = significance * advantage
     stat_better_table = tabulate(np.concatenate(
         (names_column, stat_better), axis=1), headers)
-    print("Statistically significantly better:\n", stat_better_table)
+    # print("Statistically significantly better:\n", stat_better_table)
+
+    stat_better_list = []
+    for i in range(n_clfs):
+        # print(f"{clfs_names[i]} stat better than:", end="")
+        tmp = []
+        for j in range(n_clfs):
+            if stat_better[i][j] == 1:
+                tmp.append(j + 1)
+                # print(f"{clfs_names[j]}", end="")
+        stat_better_list.append(tmp)
+        # print()
+
+    # print("Statistically significantly better:\n", stat_better_table)
+
+    return stat_better, stat_better_list

@@ -29,6 +29,11 @@ def main_loop(clfs, datasets, metrics, n_repeats, n_splits, RANDOM_STATE):
 ###########################################################################
 # ANALYSIS
 ###########################################################################
+
+class Analysis:
+    pass
+
+
 def make_clfs_mean_scores(clfs_names, root_dir, metrics_names):
     path = root_dir + "clfs_mean_scores/"
     isExist = os.path.exists(path)
@@ -39,7 +44,7 @@ def make_clfs_mean_scores(clfs_names, root_dir, metrics_names):
     clfs_mean_scores = {}
 
     for clf_name in clfs_names:
-        clfs_scores[clf_name] = np.load(f'{root_dir}{clf_name}.npy')
+        clfs_scores[clf_name] = np.load(f'{root_dir}scores/{clf_name}.npy')
         clfs_mean_scores[clf_name] = np.mean(clfs_scores[clf_name], axis=2)
 
         # saving mean_scores to files (1 classfier = 1 file)
@@ -53,7 +58,7 @@ def make_metric_mean_scores(clfs_names, root_dir, met_comp_dir, metrics_names):
     met_mean_scores = {}
 
     for clf_name in clfs_names:
-        clfs_scores[clf_name] = np.load(f'{root_dir}{clf_name}.npy')
+        clfs_scores[clf_name] = np.load(f'{root_dir}scores/{clf_name}.npy')
         clfs_mean_scores[clf_name] = np.mean(clfs_scores[clf_name], axis=2)
         #
         # # saving mean_scores to files (1 classfier = 1 file)
@@ -67,25 +72,31 @@ def make_metric_mean_scores(clfs_names, root_dir, met_comp_dir, metrics_names):
     if not isExist:
         os.makedirs(path)
 
-
+    wilcoxon_table = []
     for i, metric_name in enumerate(metrics_names):
         mean_score = np.array([ms[i] for ms in clfs_mean_scores.values()])
+        wilcoxon_stat_better, wilcoxon_list = wilcoxon(mean_score.T, clfs_names)
         met_mean_scores[metric_name] = mean_score
         mean_score = pd.DataFrame(np.round(mean_score.T, 3), columns=clfs_names, index=datasets)
-        mean_score.to_csv(f'{path}{met_comp_dir}{metric_name}.csv', sep='\t')
+        mean_score.to_csv(f'{path}{met_comp_dir}{metric_name}_scores.csv', sep='\t')
 
-    # testing different parameters by t-student
-    g_mean_score = np.array([s[0] for s in clfs_scores.values()])
-    g_mean_scores = np.swapaxes(g_mean_score, 0, 1)  # datasets x metrics x folds
+        # testing different parameters by t-student
+        g_mean_score = np.array([s[i] for s in clfs_scores.values()])
+        g_mean_scores = np.swapaxes(g_mean_score, 0, 1)  # datasets x metrics x folds
 
-    stat_better_df = []
-    for i, g_mean in enumerate(g_mean_scores):
-        stat_better, stat_better_list = t_student(g_mean, clfs_names)
-        stat_better_df.append(stat_better_list)
+        t_student_table = []
+        for i, g_mean in enumerate(g_mean_scores):
+            t_student_stat_better, t_student_list = t_student(g_mean, clfs_names)
+            t_student_table.append(t_student_list)
 
-    stat_better_df = pd.DataFrame(stat_better_df, columns=clfs_names, index=datasets)
-    stat_better_df.to_csv(f'{path}{met_comp_dir}stat_better_table.csv', sep='\t')
-    print(stat_better_df.to_string())
+
+        wilcoxon_table.append(wilcoxon_list)
+        t_student_table = pd.DataFrame(t_student_table, columns=clfs_names, index=datasets)
+        t_student_table.to_csv(f'{path}{met_comp_dir}{metric_name}_t_student_table.csv', sep='\t')
+        # print(t_student_table.to_string())
+
+    wilcoxon_table = pd.DataFrame(wilcoxon_table, columns=clfs_names, index=metrics_names)
+    wilcoxon_table.to_csv(f'{path}{met_comp_dir}wilcoxon_table.csv', sep='\t')
 
 
 # scores = np.load('results.npy')
@@ -108,10 +119,12 @@ def make_metric_mean_scores(clfs_names, root_dir, met_comp_dir, metrics_names):
 
 if __name__ == '__main__':
     # used metrics
-    metrics = (
-        geometric_mean_score, f1_score, balanced_accuracy_score, precision_score, recall_score, specificity_score)
-    metrics_names = ("geometric_mean_score", "f1_score", "balanced_accuracy_score",
-                     "precision_score", "recall_score", "specificity_score")
+    metrics = {"G-mean": geometric_mean_score,
+               "F1": f1_score,
+               "BAC": balanced_accuracy_score,
+               "Precision": precision_score,
+               "Recall": recall_score,
+               "Specificity": specificity_score}
 
     # metrics_names = ("geometric_mean_score", "specificity_score", "f1_score", "accuracy_score")
 
@@ -127,6 +140,11 @@ if __name__ == '__main__':
         # "NBBag_k3_fi1_euclidean",
         # "NBBag_k5_fi1_euclidean",
         # "NBBag_k7_fi0.5_euclidean",
+        # "NBBag_k3_fi2_chebyshev",
+        # "NBBag_k5_fi2_chebyshev",
+        "NBBag_k7_fi2_chebyshev",
+        # "NBBag_k9_fi2_chebyshev",
+        # "NBBag_k11_fi2_chebyshev",
         # "NBBag_k7_fi1_chebyshev",
         # "NBBag_k7_fi1_cosine",
         # "NBBag_k7_fi1_euclidean",
@@ -135,15 +153,15 @@ if __name__ == '__main__':
         # "NBBag_k7_fi2_euclidean",
         # "NBBag_k9_fi1_euclidean",
         # "NBBag_k11_fi1_euclidean",
-        # "AdaBoost",
-        # "EBBAG",
-        # "Bagging",
-        # "RUSBoost",
-        # "SMOTEAdaBoost"
-        "NBBag_k7_fi1_euclidean_glob",
-        "NBBag_k7_fi1_euclidean_loc",
+        "AdaBoost",
+        "EBBAG",
+        "Bagging",
+        "RUSBoost",
+        "SMOTEAdaBoost"
+        # "NBBag_k7_fi1_euclidean_glob",
+        # "NBBag_k7_fi1_euclidean_loc",
     ]
-    result_dir = "./results/glob_vs_loc/"
+    result_dir = "./results/NBBag_global_weights/"
 
-    # make_clfs_mean_scores(clfs_names, result_dir, metrics_names)
-    make_metric_mean_scores(clfs_names, result_dir, "final_comparison/", metrics_names)
+    # make_clfs_mean_scores(clfs_names, result_dir, metrics.keys())
+    make_metric_mean_scores(clfs_names, result_dir, "final_comparison/", metrics.keys())

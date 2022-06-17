@@ -72,7 +72,7 @@ def _nearest_neighbors(X, Y, k_neighbors, metric="euclidean"):
     return neighbors
 
 
-def NBBag_experiment(clf, datasets: list, metrics: tuple,
+def NBBag_experiment(clf, datasets: list, metrics: dict,
                      n_splits: int, n_repeats: int, random_state: int, k_neighbours, fi, dist_metric):
     '''
 
@@ -84,7 +84,7 @@ def NBBag_experiment(clf, datasets: list, metrics: tuple,
 
     # Different version of trial of each classifier
     for data_id, dataset_name in enumerate(datasets):
-        print(f'Dataset {dataset_name}')
+        print(f'\tdataset: {dataset_name}')
         dataset = np.genfromtxt("datasets/%s.dat" % dataset_name, delimiter=",", comments='@',
                                 converters={(-1): lambda s: 0.0 if (s.strip().decode('ascii')) == 'negative' else 1.0})
         X = dataset[:, :-1]
@@ -116,7 +116,7 @@ def NBBag_experiment(clf, datasets: list, metrics: tuple,
         W = np.array(W)
 
         for fold_id, (train, test) in enumerate(rskf.split(X, y)):
-            for metric_id, metric in enumerate(metrics):
+            for metric_id, metric in enumerate(metrics.values()):
                 clf = clone(clf)
                 clf.fit(X[train], y[train], sample_weight=W[train])
                 y_pred = clf.predict(X[test])
