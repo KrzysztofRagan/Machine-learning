@@ -1,0 +1,7 @@
+	NBBag_k3_fi2_chebyshev	NBBag_k5_fi2_chebyshev	NBBag_k7_fi2_chebyshev	NBBag_k9_fi2_chebyshev	NBBag_k11_fi2_chebyshev	NBBag_k7_fi1_chebyshev
+G-mean	[]	[]	[1, 2]	[]	[]	[]
+F1	[]	[]	[1]	[1]	[1]	[]
+BAC	[]	[]	[1, 2]	[]	[]	[]
+Precision	[]	[]	[1]	[1]	[1, 2]	[]
+Recall	[]	[]	[]	[]	[]	[]
+Specificity	[]	[]	[1]	[1]	[1, 2, 6]	[]

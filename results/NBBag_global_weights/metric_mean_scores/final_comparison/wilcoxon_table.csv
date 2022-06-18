@@ -1,0 +1,7 @@
+	NBBag_k7_fi2_chebyshev	AdaBoost	EBBAG	Bagging	RUSBoost	SMOTEAdaBoost
+G-mean	[2]	[]	[1, 2, 4, 5, 6]	[2]	[]	[2]
+F1	[2, 5, 6]	[]	[2, 4, 5, 6]	[2, 5, 6]	[2]	[2]
+BAC	[2, 6]	[]	[1, 2, 4, 5, 6]	[2, 6]	[2]	[]
+Precision	[2, 3, 6]	[]	[6]	[2, 3, 6]	[2, 3, 6]	[]
+Recall	[2]	[]	[1, 2, 4, 5, 6]	[2, 5]	[]	[2, 5]
+Specificity	[2, 3, 6]	[]	[]	[2, 3, 6]	[2, 3, 6]	[]

@@ -1,0 +1,7 @@
+	NBBag_k7_fi0.5_euclidean	NBBag_k7_fi1_euclidean	NBBag_k7_fi1.5_euclidean	NBBag_k7_fi2_euclidean
+G-mean	[]	[]	[]	[]
+F1	[]	[]	[]	[]
+BAC	[]	[]	[]	[]
+Precision	[]	[]	[]	[1, 2]
+Recall	[]	[3]	[]	[]
+Specificity	[]	[]	[]	[1, 2]

@@ -1,0 +1,7 @@
+	NBBag_k7_fi1_chebyshev	NBBag_k7_fi1_cosine	NBBag_k7_fi1_euclidean	NBBag_k7_fi1_manhattan
+G-mean	[2]	[]	[2]	[]
+F1	[2]	[]	[2]	[]
+BAC	[2, 4]	[]	[2]	[]
+Precision	[2]	[]	[2]	[2]
+Recall	[]	[]	[]	[]
+Specificity	[2]	[]	[]	[2]
