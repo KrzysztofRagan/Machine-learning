@@ -1,6 +1,6 @@
 import numpy as np
 from scipy.stats import rankdata
-from scipy.stats import ranksums
+from scipy.stats import ranksums, friedmanchisquare
 from classifiers import clfs
 from tabulate import tabulate
 from scipy.stats import ttest_rel
@@ -34,7 +34,7 @@ def ranks(mean_scores):
 
 
 # ---------------- TEST FRIEDMANNA ------------------
-def friedmann(ranks):
+def friedmann(mean_scores):
     '''
     Calculate average of the ranks
 
@@ -43,9 +43,15 @@ def friedmann(ranks):
     :return:
     :rtype:
     '''
-    print("\n------------ TEST FRIEDMANNA ------------")
+    ranks = []
+    for ms in mean_scores:
+        ranks.append(rankdata(ms).tolist())
+    ranks = np.array(ranks)
+    s, p = friedmanchisquare(ranks.T[0],ranks.T[1],ranks.T[2],
+                             ranks.T[3],ranks.T[4],ranks.T[5])
     mean_ranks = np.mean(ranks, axis=0)
-    print("\nMean ranks:\n", mean_ranks)
+    # print("\nMean ranks:\n", mean_ranks)
+    return mean_ranks, s, p
 
 
 # ---------------- TEST T-STUDENTA ------------------

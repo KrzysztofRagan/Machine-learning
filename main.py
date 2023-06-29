@@ -2,6 +2,9 @@ import os
 from operator import index
 import numpy as np
 from sklearn.ensemble import BaggingClassifier
+from collections import Counter
+from matplotlib import pyplot
+from numpy import where
 
 from parameters import *
 from experiment import experiment, NBBag_experiment
@@ -73,9 +76,15 @@ def make_metric_mean_scores(clfs_names, root_dir, met_comp_dir, metrics_names):
         os.makedirs(path)
 
     wilcoxon_table = []
+    friedmann_stats = []
     for i, metric_name in enumerate(metrics_names):
         mean_score = np.array([ms[i] for ms in clfs_mean_scores.values()])
         wilcoxon_stat_better, wilcoxon_list = wilcoxon(mean_score.T, clfs_names)
+        mean_ranks, s, p = friedmann(mean_score.T)
+        friedmann_stats.append([s, p])
+        mean_ranks = pd.DataFrame([mean_ranks], columns=clfs_names)
+
+        mean_ranks.to_csv(f'{path}{met_comp_dir}{metric_name}_mean_ranks.csv', sep='\t', index=False)
         met_mean_scores[metric_name] = mean_score
         mean_score = pd.DataFrame(np.round(mean_score.T, 3), columns=clfs_names, index=datasets)
         mean_score.to_csv(f'{path}{met_comp_dir}{metric_name}_scores.csv', sep='\t')
@@ -89,12 +98,13 @@ def make_metric_mean_scores(clfs_names, root_dir, met_comp_dir, metrics_names):
             t_student_stat_better, t_student_list = t_student(g_mean, clfs_names)
             t_student_table.append(t_student_list)
 
-
         wilcoxon_table.append(wilcoxon_list)
         t_student_table = pd.DataFrame(t_student_table, columns=clfs_names, index=datasets)
         t_student_table.to_csv(f'{path}{met_comp_dir}{metric_name}_t_student_table.csv', sep='\t')
         # print(t_student_table.to_string())
 
+    friedmann_stats = pd.DataFrame(friedmann_stats, columns=["stat", "p-value"], index=metrics_names)
+    friedmann_stats.to_csv(f'{path}{met_comp_dir}friedmann_test.csv', sep='\t')
     wilcoxon_table = pd.DataFrame(wilcoxon_table, columns=clfs_names, index=metrics_names)
     wilcoxon_table.to_csv(f'{path}{met_comp_dir}wilcoxon_table.csv', sep='\t')
 
@@ -142,26 +152,75 @@ if __name__ == '__main__':
         # "NBBag_k7_fi0.5_euclidean",
         # "NBBag_k3_fi2_chebyshev",
         # "NBBag_k5_fi2_chebyshev",
-        "NBBag_k7_fi2_chebyshev",
+        # "NBBag_k7_fi2_chebyshev",
         # "NBBag_k9_fi2_chebyshev",
         # "NBBag_k11_fi2_chebyshev",
+        # "NBBag_k7_fi1_chebyshev",
+        # # "NBBag_k7_fi1_cosine",
+        # "NBBag_k7_fi1_euclidean",
+        # "NBBag_k7_fi1_manhattan",
+        # "NBBag_k7_fi1.5_euclidean",
+        # # "NBBag_k7_fi2_euclidean",
+        # "NBBag_k9_fi1_euclidean",
+        # "NBBag_k11_fi1_euclidean",
+
+        # dist comparison
         # "NBBag_k7_fi1_chebyshev",
         # "NBBag_k7_fi1_cosine",
         # "NBBag_k7_fi1_euclidean",
         # "NBBag_k7_fi1_manhattan",
+
+        # fi comparison
+        # "NBBag_k7_fi0.5_euclidean",
+        # "NBBag_k7_fi1_euclidean",
         # "NBBag_k7_fi1.5_euclidean",
         # "NBBag_k7_fi2_euclidean",
+
+        # k comparison
+        # "NBBag_k3_fi1_euclidean",
+        # "NBBag_k5_fi1_euclidean",
+        # "NBBag_k7_fi1_euclidean",
         # "NBBag_k9_fi1_euclidean",
         # "NBBag_k11_fi1_euclidean",
+
+        # final comparison
+        "NBBag_k7_fi2_chebyshev",
         "AdaBoost",
         "EBBAG",
         "Bagging",
         "RUSBoost",
         "SMOTEAdaBoost"
+
+        # final2 comparison
+        # "NBBag_k7_fi1_chebyshev",
+        # "AdaBoost",
+        # "EBBAG",
+        # "Bagging",
+        # "RUSBoost",
+        # "SMOTEAdaBoost"
+
         # "NBBag_k7_fi1_euclidean_glob",
         # "NBBag_k7_fi1_euclidean_loc",
     ]
-    result_dir = "./results/NBBag_global_weights/"
+    # result_dir = "./results/NBBag_global_weights/"
 
     # make_clfs_mean_scores(clfs_names, result_dir, metrics.keys())
-    make_metric_mean_scores(clfs_names, result_dir, "final_comparison/", metrics.keys())
+    # make_metric_mean_scores(clfs_names, result_dir, "final_comparison/", metrics.keys())
+
+
+    for data_id, dataset_name in enumerate(datasets):
+        print(f'dataset: {dataset_name}')
+        dataset = np.genfromtxt("datasets/%s.dat" % dataset_name, delimiter=",", comments='@',
+                                converters={(-1): lambda s: 0.0 if (s.strip().decode('ascii')) == 'negative' else 1.0})
+        X = dataset[:, :-1]
+        y = dataset[:, -1].astype(int)
+
+        counter = Counter(y)
+        print(counter)
+        # scatter plot of examples by class label
+        for label, _ in counter.items():
+            row_ix = where(y == label)[0]
+            pyplot.scatter(X[row_ix, 0], X[row_ix, 1], label=str(label))
+        pyplot.title(dataset_name)
+        pyplot.legend()
+        pyplot.show()
